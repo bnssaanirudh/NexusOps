@@ -1,180 +1,77 @@
-# Industrial IoT Monitoring Platform — Phase 1
+# NexusOps: Autonomous Industrial Reliability Intelligence
 
-> **Smart Asset Monitoring Foundation** — Real-time Digital Twin platform for industrial machines.
+[![Next.js](https://img.shields.io/badge/Next.js-16.2-black?style=flat&logo=next.js)](https://nextjs.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.109-009688?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?style=flat&logo=postgresql)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat&logo=docker)](https://www.docker.com/)
 
-## 🚀 Quick Start
-
-### Prerequisites
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (for full stack)
-- OR: Python 3.12+, Node.js 20+, PostgreSQL 15
-
----
-
-### Option A: Docker Compose (Recommended)
-
-```bash
-cd docker
-docker-compose up --build
-```
-
-Services will be available at:
-| Service | URL |
-|---|---|
-| Dashboard | http://localhost:3000 |
-| Backend API | http://localhost:8000 |
-| API Docs | http://localhost:8000/docs |
-| PostgreSQL | localhost:5432 |
+> **A multi-agent operations swarm for zero-downtime manufacturing and machine diagnostics.**
 
 ---
 
-### Option B: Local Development
+## 🛑 The Problem Statement
 
-#### 1. PostgreSQL
-```bash
-# Start PostgreSQL (Docker-only)
-docker run -d --name iot-postgres \
-  -e POSTGRES_DB=industrialdb \
-  -e POSTGRES_USER=iotuser \
-  -e POSTGRES_PASSWORD=iotpassword \
-  -p 5432:5432 \
-  postgres:15-alpine
+In modern manufacturing, **reactive maintenance is a multi-billion dollar problem.** 
+When industrial machines (like turbines, CNC mills, or heavy-duty motors) fail unexpectedly, it results in catastrophic unplanned downtime, disrupted supply chains, and massive repair costs. 
 
-# Apply schema
-docker exec -i iot-postgres psql -U iotuser industrialdb < database/init.sql
-```
+Current "smart" factories often rely on simple threshold-based alerts (e.g., *“Alert: Temperature > 90°C”*). By the time these alerts trigger, the damage is usually already done. Engineers are left scrambling to diagnose the root cause manually while the factory floor bleeds money by the minute.
 
-#### 2. Backend
-```bash
-cd backend
-pip install -r requirements.txt
-uvicorn main:app --reload --port 8000
-```
+## 💡 The Solution: NexusOps
 
-#### 3. Sensor Simulator
-```bash
-cd sensor-simulator
-pip install -r requirements.txt
-python simulator.py
-```
+**NexusOps** transforms industrial monitoring from a reactive alarm system into a **proactive, autonomous intelligence platform**. 
 
-#### 4. Frontend
-```bash
-cd frontend
-npm install
-npm run dev
-```
+By leveraging live-streaming Digital Twins and a Swarm of AI Agents, NexusOps doesn't just tell you *when* a machine is breaking—it predicts the failure before it happens, diagnoses the root cause, calculates the financial impact, and autonomously drafts the repair schedule.
 
-Visit: **http://localhost:3000**
+### How it Works (The Multi-Agent Workflow):
+1. **Monitoring Agent:** Continuously watches real-time streaming telemetry (vibration, temperature, RPM) to detect statistical anomalies.
+2. **Diagnosis Agent:** Correlates anomalies with historical fault patterns (e.g., detecting early-stage *Bearing Wear* vs. *Lubrication Failure*).
+3. **Planner Agent:** Calculates the financial risk of failure vs. the cost of early maintenance to propose an optimal repair schedule.
+4. **Approval Agent:** Generates a human-readable maintenance ticket and requests executive sign-off.
 
 ---
 
-## 📁 Project Structure
+## 🌟 Key Features
 
-```
-project-root/
-├── frontend/              # Next.js 14 + TypeScript + TailwindCSS
-│   ├── app/
-│   │   ├── page.tsx       # Dashboard overview
-│   │   ├── machines/
-│   │   │   ├── page.tsx   # Machine management table
-│   │   │   └── [id]/      # Machine detail + Digital Twin
-│   ├── components/        # Reusable UI components
-│   └── lib/               # API client + WebSocket hook + types
-│
-├── backend/               # FastAPI Python backend
-│   ├── main.py            # App entry + WebSocket endpoints
-│   ├── models.py          # SQLAlchemy ORM models
-│   ├── schemas.py         # Pydantic validation
-│   ├── routers/           # API route handlers
-│   │   ├── machines.py    # GET/POST/PUT/DELETE /machines
-│   │   ├── sensors.py     # POST /sensors/ingest, GET /sensors
-│   │   ├── health.py      # GET /health
-│   │   └── events.py      # GET /events
-│   └── services/
-│       ├── health_engine.py   # Health score calculation
-│       └── digital_twin.py    # In-memory twin store
-│
-├── sensor-simulator/      # Python IoT data generator
-│   ├── simulator.py       # Main simulation loop
-│   └── machines_config.json
-│
-├── database/
-│   └── init.sql           # Schema + seed data
-│
-└── docker/
-    └── docker-compose.yml
-```
+* **Real-time Digital Twins:** 1:1 virtual representations of physical assets streaming high-frequency sensor data.
+* **Fault Injection Simulation Lab:** A built-in testing environment allowing engineers to manually inject faults (like Pressure Leaks or Rotor Imbalance) and watch the AI swarm react in real-time.
+* **Predictive AI Engine:** Calculates Remaining Useful Life (RUL) and provides SHAP-based explainability (showing exactly *why* the AI believes a failure is imminent).
+* **NASA-Style Command Center:** A sleek, daylight-industrial UI designed for maximum situational awareness.
+* **Executive Impact Dashboard:** Translates engineering metrics into business value (Total Dollars Saved, Downtime Prevented).
 
 ---
 
-## 🏭 Virtual Machines
+## 🏗️ Technical Architecture
 
-| ID | Name | Type | Location |
-|---|---|---|---|
-| M001 | Compressor Alpha | Air Compressor | Plant A - Bay 1 |
-| M002 | Pump Station Beta | Hydraulic Pump | Plant A - Bay 2 |
-| M003 | Motor Gamma | Electric Motor | Plant B - Bay 1 |
-| M004 | Turbine Delta | Steam Turbine | Plant B - Bay 3 |
-| M005 | Conveyor Epsilon | Belt Conveyor | Plant C - Bay 1 |
+The platform is designed to be enterprise-ready, containerized, and scalable.
 
----
-
-## 📊 Health Score Formula
-
-```
-Health Score = 100 - penalties
-
-Penalties (max):
-  Vibration   : -30 pts  (most critical)
-  Temperature : -25 pts
-  Pressure    : -20 pts
-  Voltage     : -15 pts
-  RPM         : -10 pts
-
-Status Classification:
-  90–100 → ✅ Healthy
-  70–89  → ⚠️ Warning
-  40–69  → 🟠 Risk
-   0–39  → 🔴 Critical
-```
+- **Frontend:** Next.js (App Router), Tailwind CSS v4, Framer Motion (for micro-animations & 3D WebGL-style effects), Recharts.
+- **Backend:** Python, FastAPI, WebSockets (for real-time streaming).
+- **Data Layer:** PostgreSQL (for state, reasoning traces, and ticket management).
+- **Simulation Engine:** A detached Python service generating synthetic baseline and degradation telemetry.
+- **Infrastructure:** Fully containerized via Docker Compose.
 
 ---
 
-## 🔌 API Endpoints
+## 🚀 How to Run Locally
 
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/machines` | List all machines |
-| POST | `/machines` | Create machine |
-| GET | `/machines/{id}` | Get machine |
-| PUT | `/machines/{id}` | Update machine |
-| DELETE | `/machines/{id}` | Soft-delete machine |
-| GET | `/machines/kpi` | KPI summary counts |
-| GET | `/machines/twins` | All Digital Twin states |
-| GET | `/machines/{id}/twin` | Single machine twin |
-| POST | `/sensors/ingest` | Ingest sensor reading |
-| GET | `/sensors` | Paginated readings |
-| GET | `/sensors/machine/{id}` | Machine sensor history |
-| GET | `/health` | All health summaries |
-| GET | `/health/machine/{id}` | Machine health history |
-| GET | `/events` | Global event log |
-| GET | `/events/machine/{id}` | Machine events |
-| WS | `/ws` | Global real-time feed |
-| WS | `/ws/machine/{id}` | Per-machine feed |
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/bnssaanirudh/NexusOps.git
+   cd NexusOps
+   ```
+
+2. **Start the Infrastructure:**
+   Ensure Docker Desktop is running, then execute:
+   ```bash
+   cd docker
+   docker-compose up --build -d
+   ```
+
+3. **Access the Platform:**
+   - **Frontend (NexusOps UI):** [http://localhost:3000](http://localhost:3000)
+   - **Backend API Docs:** [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ---
 
-## 🎯 Phase 1 Success Criteria
-
-- ✅ 5 virtual machines simulated
-- ✅ Sensor simulator with 4 operating modes
-- ✅ WebSocket real-time streaming
-- ✅ PostgreSQL storing all data
-- ✅ Digital Twin implemented
-- ✅ Health score engine with weighted penalties
-- ✅ Dashboard with live KPI cards
-- ✅ 7 live telemetry charts per machine
-- ✅ Machine management (CRUD)
-- ✅ Event log auto-generated
-- ✅ Search + filter by status
-- ✅ Role indicator (Admin/Engineer foundation)
+## 🎮 The Demo Sequence
+To see the true power of NexusOps, visit the `http://localhost:3000/demo` route. This triggers an automated, storytelling sequence that walks through a machine operating normally, degrading via fault injection, and the entire AI Swarm stepping in to save the day!
