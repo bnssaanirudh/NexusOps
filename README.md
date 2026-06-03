@@ -1,3 +1,5 @@
+![NexusOps Banner](https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1200&q=80)
+
 # NexusOps: Autonomous Industrial Reliability Intelligence
 
 [![Next.js](https://img.shields.io/badge/Next.js-16.2-black?style=flat&logo=next.js)](https://nextjs.org/)
@@ -75,3 +77,4 @@ The platform is designed to be enterprise-ready, containerized, and scalable.
 
 ## 🎮 The Demo Sequence
 To see the true power of NexusOps, visit the `http://localhost:3000/demo` route. This triggers an automated, storytelling sequence that walks through a machine operating normally, degrading via fault injection, and the entire AI Swarm stepping in to save the day!
+
