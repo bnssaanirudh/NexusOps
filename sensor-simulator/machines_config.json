@@ -1,0 +1,119 @@
+{
+  "machines": [
+    {
+      "machine_id": "M001",
+      "name": "Compressor Alpha",
+      "type": "Air Compressor",
+      "nominal": {
+        "temperature": 65.0,
+        "pressure": 45.0,
+        "vibration": 0.10,
+        "humidity": 55.0,
+        "voltage": 220.0,
+        "current": 15.0,
+        "rpm": 1500.0
+      },
+      "ranges": {
+        "temperature": [50.0, 95.0],
+        "pressure": [30.0, 70.0],
+        "vibration": [0.05, 1.5],
+        "humidity": [40.0, 70.0],
+        "voltage": [200.0, 240.0],
+        "current": [10.0, 25.0],
+        "rpm": [1200.0, 1800.0]
+      }
+    },
+    {
+      "machine_id": "M002",
+      "name": "Pump Station Beta",
+      "type": "Hydraulic Pump",
+      "nominal": {
+        "temperature": 55.0,
+        "pressure": 60.0,
+        "vibration": 0.08,
+        "humidity": 50.0,
+        "voltage": 220.0,
+        "current": 12.0,
+        "rpm": 1200.0
+      },
+      "ranges": {
+        "temperature": [40.0, 85.0],
+        "pressure": [40.0, 90.0],
+        "vibration": [0.04, 1.2],
+        "humidity": [35.0, 65.0],
+        "voltage": [200.0, 240.0],
+        "current": [8.0, 20.0],
+        "rpm": [1000.0, 1400.0]
+      }
+    },
+    {
+      "machine_id": "M003",
+      "name": "Motor Gamma",
+      "type": "Electric Motor",
+      "nominal": {
+        "temperature": 70.0,
+        "pressure": 35.0,
+        "vibration": 0.12,
+        "humidity": 45.0,
+        "voltage": 380.0,
+        "current": 20.0,
+        "rpm": 3000.0
+      },
+      "ranges": {
+        "temperature": [55.0, 110.0],
+        "pressure": [20.0, 55.0],
+        "vibration": [0.06, 2.0],
+        "humidity": [30.0, 60.0],
+        "voltage": [360.0, 400.0],
+        "current": [14.0, 30.0],
+        "rpm": [2700.0, 3300.0]
+      }
+    },
+    {
+      "machine_id": "M004",
+      "name": "Turbine Delta",
+      "type": "Steam Turbine",
+      "nominal": {
+        "temperature": 85.0,
+        "pressure": 80.0,
+        "vibration": 0.15,
+        "humidity": 60.0,
+        "voltage": 440.0,
+        "current": 30.0,
+        "rpm": 3600.0
+      },
+      "ranges": {
+        "temperature": [70.0, 130.0],
+        "pressure": [55.0, 120.0],
+        "vibration": [0.08, 2.5],
+        "humidity": [45.0, 75.0],
+        "voltage": [420.0, 460.0],
+        "current": [20.0, 45.0],
+        "rpm": [3400.0, 3800.0]
+      }
+    },
+    {
+      "machine_id": "M005",
+      "name": "Conveyor Epsilon",
+      "type": "Belt Conveyor",
+      "nominal": {
+        "temperature": 45.0,
+        "pressure": 25.0,
+        "vibration": 0.06,
+        "humidity": 50.0,
+        "voltage": 220.0,
+        "current": 8.0,
+        "rpm": 900.0
+      },
+      "ranges": {
+        "temperature": [35.0, 70.0],
+        "pressure": [15.0, 40.0],
+        "vibration": [0.03, 1.0],
+        "humidity": [35.0, 65.0],
+        "voltage": [200.0, 240.0],
+        "current": [5.0, 15.0],
+        "rpm": [750.0, 1050.0]
+      }
+    }
+  ]
+}

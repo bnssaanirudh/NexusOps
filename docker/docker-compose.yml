@@ -1,0 +1,79 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: incomelens_postgres
+    environment:
+      POSTGRES_DB: industrialdb
+      POSTGRES_USER: iotuser
+      POSTGRES_PASSWORD: iotpassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - iot_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U iotuser -d industrialdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: incomelens_backend
+    environment:
+      DATABASE_URL: postgresql+asyncpg://iotuser:iotpassword@postgres:5432/industrialdb
+      CORS_ORIGINS: "http://localhost:3000"
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - iot_network
+    volumes:
+      - ../backend:/app
+    restart: unless-stopped
+
+  simulator:
+    build:
+      context: ../sensor-simulator
+      dockerfile: Dockerfile
+    container_name: incomelens_simulator
+    environment:
+      BACKEND_URL: http://backend:8000
+      BACKEND_WS_URL: ws://backend:8000
+      SIMULATION_INTERVAL: 2
+    depends_on:
+      - backend
+    networks:
+      - iot_network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: incomelens_frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXT_PUBLIC_WS_URL: ws://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - iot_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  iot_network:
+    driver: bridge
