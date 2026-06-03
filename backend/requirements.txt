@@ -16,3 +16,5 @@ langgraph==0.0.65
 langchain-core==0.2.9
 pandas==2.1.4
 numpy==1.26.2
+
+pytest==8.0.0
