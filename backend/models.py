@@ -141,7 +141,6 @@ class Alert(Base):
     recommendation = Column(String, nullable=True)
     status = Column(String, default="Active")
     resolved_at = Column(DateTime(timezone=True), nullable=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     __table_args__ = (
         CheckConstraint("severity IN ('Info', 'Warning', 'High Risk', 'Critical')", name="chk_alert_severity"),

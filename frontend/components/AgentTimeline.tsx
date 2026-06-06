@@ -1,9 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Clock, ShieldAlert, ArrowRight, Settings } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Clock, Settings } from "lucide-react";
 
 export interface AgentEvent {
   id: string;
@@ -17,67 +15,106 @@ interface AgentTimelineProps {
   events: AgentEvent[];
 }
 
+const T = {
+  cream: '#F2EEE8', creamDark: '#E8E2D9', creamMid: '#DDD5C8',
+  ink: '#1C1A18', inkSoft: '#6B6158', inkGhost: '#9A9089',
+  amber: '#C07C2A', amberLight: '#F5D6A8',
+  rust: '#B84432', rustLight: '#F0C4BC',
+  sage: '#3A6B4A', sageLight: '#C0D9C8',
+  steel: '#3A5070', steelLight: '#D0DFF0',
+  warning: '#917320', warningLight: '#F0DCA0',
+  FONT: "'Space Grotesk', sans-serif",
+  MONO: "'Space Mono', monospace",
+};
+
+const AGENT_META: Record<string, { color: string; bg: string; dot: string }> = {
+  "Monitoring Agent": { color: T.steel,   bg: T.steelLight,   dot: T.steel },
+  "Diagnosis Agent":  { color: T.warning, bg: T.warningLight, dot: T.amber },
+  "Planner Agent":    { color: T.sage,    bg: T.sageLight,    dot: T.sage },
+  "Approval Agent":   { color: T.rust,    bg: T.rustLight,    dot: T.rust },
+};
+
 export function AgentTimeline({ events }: AgentTimelineProps) {
-  if (!events || events.length === 0) {
-    return (
-      <Card className="h-full">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg">Agent Activity</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center justify-center py-12 text-slate-400">
-          <Clock className="w-8 h-8 mb-2 opacity-20" />
-          <p className="text-sm">No recent agent activity</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  const getAgentColor = (agent: string) => {
-    switch (agent) {
-      case "Monitoring Agent": return "bg-blue-100 text-blue-700 border-blue-200";
-      case "Diagnosis Agent": return "bg-amber-100 text-amber-700 border-amber-200";
-      case "Planner Agent": return "bg-purple-100 text-purple-700 border-purple-200";
-      case "Approval Agent": return "bg-emerald-100 text-emerald-700 border-emerald-200";
-      default: return "bg-slate-100 text-slate-700 border-slate-200";
-    }
-  };
-
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="border-b border-[#E5E7EB] bg-slate-50/50 py-3">
-        <CardTitle className="text-sm font-semibold uppercase tracking-wider text-slate-600 flex items-center gap-2">
-          <Settings className="w-4 h-4" /> Agent Operations Timeline
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex-1 overflow-y-auto p-4">
-        <div className="relative pl-6 space-y-6 before:absolute before:inset-0 before:ml-2.5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-slate-200 before:to-transparent">
-          {events.map((event, idx) => (
-            <motion.div 
-              key={event.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: idx * 0.1 }}
-              className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active"
-            >
-              {/* Timeline marker */}
-              <div className="absolute left-[-26px] md:left-1/2 md:-translate-x-1/2 flex h-6 w-6 items-center justify-center rounded-full border-4 border-white bg-slate-200 group-[.is-active]:bg-blue-600 shadow-sm"></div>
-              
-              <div className="w-full bg-white border border-[#E5E7EB] rounded-lg p-3 shadow-sm hover-lift">
-                <div className="flex items-center justify-between mb-2">
-                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${getAgentColor(event.agent)}`}>
-                    {event.agent}
-                  </span>
-                  <time className="text-xs font-medium text-slate-500">
-                    {new Date(event.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                  </time>
-                </div>
-                <h4 className="text-sm font-bold text-slate-900">{event.action}</h4>
-                <p className="text-sm text-slate-600 mt-1">{event.details}</p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+    <div style={{
+      display: 'flex', flexDirection: 'column', height: '100%',
+      backgroundColor: T.creamDark, border: `1px solid ${T.creamMid}`,
+      borderRadius: '0.75rem', overflow: 'hidden',
+    }}>
+      {/* Header */}
+      <div style={{
+        padding: '0.875rem 1.25rem',
+        borderBottom: `1px solid ${T.creamMid}`,
+        backgroundColor: T.cream,
+        display: 'flex', alignItems: 'center', gap: '0.5rem',
+      }}>
+        <Settings style={{ width: '13px', height: '13px', color: T.inkGhost }} />
+        <span style={{ fontFamily: T.MONO, fontSize: '0.6rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: T.inkGhost, fontWeight: 700 }}>
+          Agent Operations Timeline
+        </span>
+      </div>
+
+      {/* Events */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '1rem 1.25rem' }}>
+        {!events || events.length === 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: T.inkGhost, gap: '0.5rem' }}>
+            <Clock style={{ width: '24px', height: '24px', opacity: 0.3 }} />
+            <p style={{ fontFamily: T.MONO, fontSize: '0.65rem', letterSpacing: '0.1em', textTransform: 'uppercase' }}>No agent activity</p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {events.map((event, idx) => {
+              const meta = AGENT_META[event.agent] ?? { color: T.inkSoft, bg: T.creamMid, dot: T.inkSoft };
+              return (
+                <motion.div
+                  key={event.id}
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: idx * 0.06 }}
+                  style={{
+                    display: 'flex', gap: '0.875rem', alignItems: 'flex-start',
+                    backgroundColor: T.cream,
+                    border: `1px solid ${T.creamMid}`,
+                    borderRadius: '0.625rem',
+                    padding: '0.875rem 1rem',
+                  }}
+                >
+                  {/* Dot */}
+                  <div style={{
+                    width: '8px', height: '8px', borderRadius: '50%',
+                    backgroundColor: meta.dot, flexShrink: 0, marginTop: '5px',
+                  }} />
+
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem', flexWrap: 'wrap', gap: '0.375rem' }}>
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center',
+                        padding: '0.175rem 0.6rem',
+                        backgroundColor: meta.bg,
+                        border: `1px solid ${meta.color}25`,
+                        borderRadius: '100px',
+                        fontFamily: T.FONT, fontWeight: 700, fontSize: '0.68rem',
+                        color: meta.color, letterSpacing: '0.03em',
+                      }}>
+                        {event.agent}
+                      </span>
+                      <time style={{ fontFamily: T.MONO, fontSize: '0.6rem', color: T.inkGhost, letterSpacing: '0.05em' }}>
+                        {new Date(event.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                      </time>
+                    </div>
+                    <h4 style={{ fontFamily: T.FONT, fontWeight: 600, fontSize: '0.85rem', color: T.ink, marginBottom: '0.15rem' }}>
+                      {event.action}
+                    </h4>
+                    <p style={{ fontFamily: T.FONT, fontSize: '0.8rem', color: T.inkSoft, lineHeight: 1.5 }}>
+                      {event.details}
+                    </p>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

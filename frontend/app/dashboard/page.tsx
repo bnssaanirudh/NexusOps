@@ -2,41 +2,45 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { machineApi, agentApi } from "@/lib/api";
-import type { Machine, DigitalTwinState } from "@/lib/types";
+import type { DigitalTwinState } from "@/lib/types";
 import { DigitalTwinViewer } from "@/components/DigitalTwinViewer";
 import { AgentTimeline, AgentEvent } from "@/components/AgentTimeline";
 import { AgentReasoningCard } from "@/components/AgentReasoningCard";
 import { useWebSocket } from "@/lib/websocket";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ActivitySquare, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
+import { ActivitySquare, CheckCircle, AlertTriangle, XCircle, LayoutDashboard } from "lucide-react";
+import { motion } from "framer-motion";
+
+const T = {
+  cream: '#F2EEE8', creamDark: '#E8E2D9', creamMid: '#DDD5C8',
+  ink: '#1C1A18', inkMid: '#3D3830', inkSoft: '#6B6158', inkGhost: '#9A9089',
+  amber: '#C07C2A', amberLight: '#F5D6A8',
+  rust: '#B84432', rustLight: '#F0C4BC',
+  sage: '#3A6B4A', sageLight: '#C0D9C8',
+  steel: '#3A5070', steelLight: '#D0DFF0',
+  warning: '#917320', warningLight: '#F0DCA0',
+  FONT: "'Space Grotesk', sans-serif",
+  MONO: "'Space Mono', monospace",
+};
 
 export default function DashboardPage() {
-  const [machines, setMachines] = useState<Machine[]>([]);
+  const [machines, setMachines] = useState<DigitalTwinState[]>([]);
   const [activeMachineId, setActiveMachineId] = useState<string | null>(null);
   const [twin, setTwin] = useState<DigitalTwinState | null>(null);
   const [events, setEvents] = useState<AgentEvent[]>([]);
-  
-  // Dummy agent events for the UI if API doesn't provide them nicely
-  const generateAgentEvents = (machineId: string) => {
-    return [
-      { id: "1", timestamp: new Date(Date.now() - 50000).toISOString(), agent: "Monitoring Agent" as const, action: "Anomaly Detected", details: `Vibration spike detected on ${machineId}` },
-      { id: "2", timestamp: new Date(Date.now() - 40000).toISOString(), agent: "Diagnosis Agent" as const, action: "Root Cause Analysis", details: "Bearing degradation likely based on historical patterns" },
-      { id: "3", timestamp: new Date(Date.now() - 30000).toISOString(), agent: "Planner Agent" as const, action: "Action Proposed", details: "Schedule bearing replacement within 48h" }
-    ];
-  };
+
+  const generateAgentEvents = (machineId: string) => [
+    { id: "1", timestamp: new Date(Date.now() - 50000).toISOString(), agent: "Monitoring Agent" as const, action: "Anomaly Detected", details: `Vibration spike detected on ${machineId}` },
+    { id: "2", timestamp: new Date(Date.now() - 40000).toISOString(), agent: "Diagnosis Agent" as const, action: "Root Cause Analysis", details: "Bearing degradation likely based on historical patterns" },
+    { id: "3", timestamp: new Date(Date.now() - 30000).toISOString(), agent: "Planner Agent" as const, action: "Action Proposed", details: "Schedule bearing replacement within 48h" },
+  ];
 
   useEffect(() => {
     async function init() {
       try {
-        const list = await machineApi.list();
+        const list = await machineApi.twins();
         setMachines(list);
-        if (list.length > 0) {
-          setActiveMachineId(list[0].machine_id);
-        }
-      } catch (err) {
-        console.error("Failed to load machines:", err);
-      }
+        if (list.length > 0) setActiveMachineId(list[0].machine_id);
+      } catch (err) { console.error("Failed to load machines:", err); }
     }
     init();
   }, []);
@@ -48,80 +52,149 @@ export default function DashboardPage() {
         const twinData = await machineApi.twin(activeMachineId!);
         setTwin(twinData);
         setEvents(generateAgentEvents(activeMachineId!));
-      } catch (err) {
-        console.error("Failed to load twin:", err);
-      }
+      } catch (err) { console.error("Failed to load twin:", err); }
     }
     loadTwin();
   }, [activeMachineId]);
 
-  // WebSocket for real-time twin updates
   const handleSensorUpdate = useCallback((machineId: string, payload: any) => {
-    if (machineId === activeMachineId && payload.twin) {
-      setTwin(payload.twin);
-    }
+    if (machineId === activeMachineId && payload.twin) setTwin(payload.twin);
   }, [activeMachineId]);
 
-  useWebSocket({
-    machineId: activeMachineId || "M001",
-    onSensorUpdate: handleSensorUpdate,
-  });
+  useWebSocket({ machineId: activeMachineId || "M001", onSensorUpdate: handleSensorUpdate });
 
-  const healthyCount = machines.filter(m => m.status === "Healthy").length;
-  const warningCount = machines.filter(m => m.status === "Warning").length;
+  const healthyCount  = machines.filter(m => m.status === "Healthy").length;
+  const warningCount  = machines.filter(m => m.status === "Warning").length;
   const criticalCount = machines.filter(m => m.status === "Critical").length;
 
+  const getStatusMeta = (status: string) => {
+    if (status === "Healthy")  return { color: T.sage,    bg: T.sageLight };
+    if (status === "Warning")  return { color: T.warning, bg: T.warningLight };
+    if (status === "Critical") return { color: T.rust,    bg: T.rustLight };
+    return { color: T.steel, bg: T.steelLight };
+  };
+
   return (
-    <div className="flex flex-col gap-6 w-full max-w-[1600px] mx-auto h-full pb-10">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '1600px', margin: '0 auto', padding: '1.5rem 0 2.5rem' }}>
       
-      {/* KPI Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
-        <KPICard title="Total Assets" value={machines.length.toString()} icon={ActivitySquare} color="text-blue-600" />
-        <KPICard title="Healthy" value={healthyCount.toString()} icon={CheckCircle} color="text-emerald-600" />
-        <KPICard title="Warning" value={warningCount.toString()} icon={AlertTriangle} color="text-amber-500" />
-        <KPICard title="Critical" value={criticalCount.toString()} icon={XCircle} color="text-red-500" />
+      {/* Page Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', borderBottom: `1px solid ${T.creamMid}`, paddingBottom: '1.25rem' }}>
+        <div style={{ width: '32px', height: '32px', background: T.ink, borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <LayoutDashboard style={{ width: '15px', height: '15px', color: T.cream }} />
+        </div>
+        <div>
+          <h1 style={{ fontFamily: T.FONT, fontWeight: 700, fontSize: '1.35rem', letterSpacing: '-0.03em', color: T.ink }}>
+            Command Center
+          </h1>
+          <p style={{ fontFamily: T.MONO, fontSize: '0.6rem', color: T.inkGhost, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+            Real-time fleet monitoring & digital twin control
+          </p>
+        </div>
       </div>
 
-      {/* Main Command Center Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[500px]">
+      {/* KPI Row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
+        {[
+          { title: 'Total Assets', value: machines.length, icon: ActivitySquare, color: T.steel, bg: T.steelLight },
+          { title: 'Healthy', value: healthyCount, icon: CheckCircle, color: T.sage, bg: T.sageLight },
+          { title: 'Warning', value: warningCount, icon: AlertTriangle, color: T.warning, bg: T.warningLight },
+          { title: 'Critical', value: criticalCount, icon: XCircle, color: T.rust, bg: T.rustLight },
+        ].map((kpi, i) => (
+          <motion.div
+            key={kpi.title}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.08 }}
+            style={{
+              backgroundColor: T.creamDark, border: `1px solid ${T.creamMid}`,
+              borderRadius: '0.75rem', padding: '1.25rem 1.5rem',
+              display: 'flex', alignItems: 'center', gap: '1rem',
+            }}
+          >
+            <div style={{
+              width: '40px', height: '40px', borderRadius: '0.625rem',
+              backgroundColor: kpi.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              <kpi.icon style={{ width: '18px', height: '18px', color: kpi.color }} />
+            </div>
+            <div>
+              <div style={{ fontFamily: T.FONT, fontWeight: 700, fontSize: '1.75rem', letterSpacing: '-0.04em', lineHeight: 1, color: T.ink }}>
+                {kpi.value}
+              </div>
+              <div style={{ fontFamily: T.MONO, fontSize: '0.58rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: T.inkGhost, marginTop: '0.15rem' }}>
+                {kpi.title}
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Main Layout */}
+      <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr 280px', gap: '1.25rem', minHeight: '520px' }}>
         
-        {/* Left: Machine List (3 cols) */}
-        <Card className="lg:col-span-3 flex flex-col overflow-hidden bg-white border-[#E5E7EB]">
-          <div className="p-4 border-b border-[#E5E7EB] bg-slate-50 font-semibold text-slate-700">
+        {/* Left — Machine List */}
+        <div style={{
+          backgroundColor: T.creamDark, border: `1px solid ${T.creamMid}`,
+          borderRadius: '0.75rem', overflow: 'hidden', display: 'flex', flexDirection: 'column',
+        }}>
+          <div style={{
+            padding: '0.875rem 1rem', borderBottom: `1px solid ${T.creamMid}`,
+            backgroundColor: T.cream,
+            fontFamily: T.MONO, fontSize: '0.6rem', letterSpacing: '0.15em',
+            textTransform: 'uppercase', color: T.inkGhost, fontWeight: 700,
+          }}>
             Active Assets
           </div>
-          <div className="flex-1 overflow-y-auto p-2 space-y-1 max-h-[500px]">
-            {machines.map((m) => (
-              <button
-                key={m.machine_id}
-                onClick={() => setActiveMachineId(m.machine_id)}
-                className={`w-full flex items-center justify-between p-3 rounded-md transition-colors text-left ${
-                  activeMachineId === m.machine_id ? "bg-[#0F4C81] text-white shadow-md" : "hover:bg-slate-100 text-slate-700"
-                }`}
-              >
-                <div>
-                  <div className="font-semibold">{m.machine_id}</div>
-                  <div className={`text-xs ${activeMachineId === m.machine_id ? "text-blue-200" : "text-slate-500"}`}>
-                    {m.machine_type}
+          <div style={{ flex: 1, overflowY: 'auto', padding: '0.5rem' }}>
+            {machines.map((m) => {
+              const meta = getStatusMeta(m.status);
+              const isActive = activeMachineId === m.machine_id;
+              return (
+                <button
+                  key={m.machine_id}
+                  onClick={() => setActiveMachineId(m.machine_id)}
+                  style={{
+                    width: '100%', textAlign: 'left', padding: '0.75rem 0.875rem',
+                    borderRadius: '0.5rem', cursor: 'pointer', border: 'none',
+                    backgroundColor: isActive ? T.cream : 'transparent',
+                    boxShadow: isActive ? `0 0 0 1.5px ${T.creamMid}` : 'none',
+                    display: 'flex', flexDirection: 'column', gap: '0.35rem',
+                    transition: 'background 0.15s ease',
+                    marginBottom: '0.25rem',
+                  }}
+                  onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.backgroundColor = T.cream + '80'; }}
+                  onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'; }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontFamily: T.FONT, fontWeight: 700, fontSize: '0.85rem', color: T.ink }}>
+                      {m.machine_id}
+                    </span>
+                    <span style={{
+                      padding: '0.15rem 0.5rem', borderRadius: '100px',
+                      backgroundColor: meta.bg, color: meta.color,
+                      fontFamily: T.FONT, fontWeight: 700, fontSize: '0.6rem', letterSpacing: '0.04em',
+                    }}>
+                      {m.status}
+                    </span>
                   </div>
-                </div>
-                <Badge variant={m.status.toLowerCase() as any} className={activeMachineId === m.machine_id ? "border-white/20" : ""}>
-                  {m.status}
-                </Badge>
-              </button>
-            ))}
+                  <span style={{ fontFamily: T.MONO, fontSize: '0.6rem', color: T.inkGhost, letterSpacing: '0.05em' }}>
+                    {m.machine_type}
+                  </span>
+                </button>
+              );
+            })}
           </div>
-        </Card>
+        </div>
 
-        {/* Center: Digital Twin (6 cols) */}
-        <div className="lg:col-span-6 flex flex-col">
+        {/* Center — Digital Twin */}
+        <div>
           <DigitalTwinViewer twin={twin} />
         </div>
 
-        {/* Right: Agent Reasoning (3 cols) */}
-        <div className="lg:col-span-3 flex flex-col">
-          <AgentReasoningCard 
-            conclusion={twin?.status === "Critical" ? "Bearing Failure Detected" : twin?.status === "Warning" ? "Vibration Anomaly - Possible Degradation" : "Normal Operation"}
+        {/* Right — Agent Reasoning */}
+        <div>
+          <AgentReasoningCard
+            conclusion={twin?.status === "Critical" ? "Bearing Failure Detected" : twin?.status === "Warning" ? "Vibration Anomaly — Possible Degradation" : "Normal Operation"}
             evidence={[
               { metric: "Vibration", trend: twin?.vibration && twin.vibration > 0.15 ? "up" : "stable", value: twin?.vibration ? `${twin.vibration.toFixed(3)}g` : "0.10g" },
               { metric: "Temperature", trend: twin?.temperature && twin.temperature > 70 ? "up" : "stable", value: twin?.temperature ? `${twin.temperature.toFixed(1)}°C` : "65.0°C" },
@@ -131,25 +204,10 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Bottom: Agent Timeline */}
-      <div className="h-[250px]">
+      {/* Agent Timeline */}
+      <div style={{ height: '280px' }}>
         <AgentTimeline events={events} />
       </div>
-      
     </div>
-  );
-}
-
-function KPICard({ title, value, icon: Icon, color }: any) {
-  return (
-    <Card className="flex items-center p-5 bg-white hover-lift transition-all">
-      <div className={`p-3 rounded-full bg-slate-50 border border-slate-100 mr-4 ${color}`}>
-        <Icon className="w-6 h-6" />
-      </div>
-      <div>
-        <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider">{title}</p>
-        <p className="text-2xl font-bold text-slate-900">{value}</p>
-      </div>
-    </Card>
   );
 }

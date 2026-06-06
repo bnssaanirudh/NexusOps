@@ -1,114 +1,177 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Activity, Thermometer, Gauge, Zap, Wind } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { DigitalTwinState } from "@/lib/api";
+import { Activity, Thermometer, Gauge, Zap, Wind, Droplets } from "lucide-react";
+import type { DigitalTwinState } from "@/lib/types";
 
 interface DigitalTwinViewerProps {
   twin: DigitalTwinState | null;
 }
 
+const T = {
+  cream: '#F2EEE8', creamDark: '#E8E2D9', creamMid: '#DDD5C8',
+  ink: '#1C1A18', inkMid: '#3D3830', inkSoft: '#6B6158', inkGhost: '#9A9089',
+  amber: '#C07C2A', amberLight: '#F5D6A8',
+  rust: '#B84432', rustLight: '#F0C4BC',
+  sage: '#3A6B4A', sageLight: '#C0D9C8',
+  steel: '#3A5070', steelLight: '#D0DFF0',
+  warning: '#917320', warningLight: '#F0DCA0',
+  FONT: "'Space Grotesk', sans-serif",
+  MONO: "'Space Mono', monospace",
+};
+
+const getStatusMeta = (status: string) => {
+  switch (status) {
+    case "Healthy":  return { color: T.sage,    bg: T.sageLight,    ring: T.sage };
+    case "Warning":  return { color: T.warning,  bg: T.warningLight, ring: T.amber };
+    case "Critical": return { color: T.rust,     bg: T.rustLight,    ring: T.rust };
+    default:         return { color: T.steel,    bg: T.steelLight,   ring: T.steel };
+  }
+};
+
 export function DigitalTwinViewer({ twin }: DigitalTwinViewerProps) {
   if (!twin) {
     return (
-      <Card className="h-full flex flex-col items-center justify-center p-8 text-slate-400">
-        <Activity className="w-12 h-12 mb-4 opacity-20" />
-        <p>Select a machine to view its Digital Twin</p>
-      </Card>
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        height: '100%', minHeight: '400px', backgroundColor: T.creamDark,
+        border: `1px solid ${T.creamMid}`, borderRadius: '0.75rem', color: T.inkGhost,
+        gap: '0.75rem', padding: '2rem',
+      }}>
+        <Activity style={{ width: '36px', height: '36px', opacity: 0.3 }} />
+        <p style={{ fontFamily: T.MONO, fontSize: '0.72rem', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+          Select a machine to view Digital Twin
+        </p>
+      </div>
     );
   }
 
-  // Determine colors based on status
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Healthy": return "#16A34A";
-      case "Warning": return "#F59E0B";
-      case "Critical": return "#DC2626";
-      default: return "#0F4C81";
-    }
-  };
-  
-  const statusColor = getStatusColor(twin.status);
-  
-  const circumference = 2 * Math.PI * 120;
+  const meta = getStatusMeta(twin.status);
+  const circumference = 2 * Math.PI * 108;
   const strokeDashoffset = circumference - (twin.health_score / 100) * circumference;
 
   return (
-    <Card className="h-full flex flex-col relative overflow-hidden bg-gradient-to-b from-white to-slate-50">
-      <CardHeader className="border-b border-[#E5E7EB] bg-white z-10">
-        <div className="flex justify-between items-center">
-          <div>
-            <CardTitle className="text-2xl text-[#0F4C81]">{twin.machine_id}</CardTitle>
-            <p className="text-sm text-slate-500 mt-1">{twin.machine_type} • {twin.location}</p>
+    <div style={{
+      height: '100%', display: 'flex', flexDirection: 'column',
+      backgroundColor: T.creamDark, border: `1px solid ${T.creamMid}`,
+      borderRadius: '0.75rem', overflow: 'hidden',
+    }}>
+      {/* Header */}
+      <div style={{
+        padding: '1.25rem 1.5rem',
+        borderBottom: `1px solid ${T.creamMid}`,
+        display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+        backgroundColor: T.cream,
+      }}>
+        <div>
+          <div style={{ fontFamily: T.MONO, fontSize: '0.58rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: T.inkGhost, marginBottom: '0.2rem' }}>
+            Digital Twin
           </div>
-          <Badge 
-            variant={twin.status.toLowerCase() as any}
-            className="text-sm px-3 py-1 uppercase tracking-wider"
-          >
-            {twin.status}
-          </Badge>
+          <h3 style={{ fontFamily: T.FONT, fontWeight: 700, fontSize: '1.35rem', letterSpacing: '-0.03em', color: T.ink }}>
+            {twin.machine_id}
+          </h3>
+          <p style={{ fontFamily: T.FONT, fontSize: '0.8rem', color: T.inkSoft, marginTop: '0.1rem' }}>
+            {twin.machine_type} · {twin.location}
+          </p>
         </div>
-      </CardHeader>
-      
-      <CardContent className="flex-1 flex flex-col items-center justify-center p-8 relative">
-        {/* Animated Background Pulse for Critical State */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '0.375rem',
+          padding: '0.35rem 0.875rem',
+          backgroundColor: meta.bg,
+          border: `1px solid ${meta.color}30`,
+          borderRadius: '100px',
+          fontFamily: T.FONT, fontWeight: 700, fontSize: '0.72rem',
+          color: meta.color, letterSpacing: '0.04em',
+        }}>
+          <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: meta.color }} />
+          {twin.status.toUpperCase()}
+        </div>
+      </div>
+
+      {/* Central ring + sensors */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', gap: '2rem', position: 'relative' }}>
+        
+        {/* Critical pulse bg */}
         {twin.status === "Critical" && (
-          <div className="absolute inset-0 bg-red-500/5 animate-pulse-subtle pointer-events-none" />
+          <div style={{
+            position: 'absolute', inset: 0, 
+            background: `radial-gradient(ellipse at center, ${T.rustLight}60 0%, transparent 70%)`,
+            pointerEvents: 'none',
+          }} />
         )}
 
-        {/* Central Health Ring */}
-        <div className="relative w-[300px] h-[300px] flex items-center justify-center">
-          <svg className="absolute inset-0 transform -rotate-90 w-full h-full">
-            <circle
-              cx="150"
-              cy="150"
-              r="120"
-              stroke="#E5E7EB"
-              strokeWidth="12"
-              fill="none"
-            />
+        {/* Health Ring */}
+        <div style={{ position: 'relative', width: '260px', height: '260px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg style={{ position: 'absolute', inset: 0, transform: 'rotate(-90deg)', width: '100%', height: '100%' }}>
+            <circle cx="130" cy="130" r="108" stroke={T.creamMid} strokeWidth="10" fill="none" />
             <motion.circle
-              cx="150"
-              cy="150"
-              r="120"
-              stroke={statusColor}
-              strokeWidth="12"
+              cx="130" cy="130" r="108"
+              stroke={meta.ring}
+              strokeWidth="10"
               fill="none"
               strokeLinecap="round"
               initial={{ strokeDashoffset: circumference }}
               animate={{ strokeDashoffset }}
-              transition={{ duration: 1, ease: "easeOut" }}
+              transition={{ duration: 1.2, ease: "easeOut" }}
               style={{ strokeDasharray: circumference }}
             />
           </svg>
-          <div className="text-center z-10 flex flex-col items-center">
-            <span className="text-6xl font-bold text-slate-900 tracking-tighter">
-              {Math.round(twin.health_score)}%
-            </span>
-            <span className="text-sm font-medium text-slate-500 uppercase tracking-widest mt-1">Health</span>
+          <div style={{ textAlign: 'center', zIndex: 1 }}>
+            <div style={{ fontFamily: T.FONT, fontWeight: 700, fontSize: '3.5rem', letterSpacing: '-0.05em', lineHeight: 1, color: T.ink }}>
+              {Math.round(twin.health_score)}
+              <span style={{ fontSize: '1.5rem', color: T.inkSoft }}>%</span>
+            </div>
+            <div style={{ fontFamily: T.MONO, fontSize: '0.6rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: T.inkGhost, marginTop: '0.25rem' }}>
+              Health Score
+            </div>
           </div>
         </div>
 
-        {/* Sensor Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full mt-8 z-10">
-          <SensorBox icon={Thermometer} label="Temp" value={`${twin.temperature.toFixed(1)}°C`} />
-          <SensorBox icon={Activity} label="Vibration" value={`${twin.vibration.toFixed(3)}g`} />
-          <SensorBox icon={Wind} label="Pressure" value={`${twin.pressure.toFixed(1)} PSI`} />
-          <SensorBox icon={Zap} label="Voltage" value={`${twin.voltage.toFixed(1)}V`} />
+        {/* Sensor readings grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem', width: '100%' }}>
+          <SensorTile icon={Thermometer} label="Temp" value={`${twin.temperature?.toFixed(1) ?? '--'}°C`} accent={T.rust} />
+          <SensorTile icon={Activity}   label="Vibration" value={`${twin.vibration?.toFixed(3) ?? '--'}g`} accent={T.amber} />
+          <SensorTile icon={Wind}       label="Pressure" value={`${twin.pressure?.toFixed(1) ?? '--'} PSI`} accent={T.steel} />
+          <SensorTile icon={Zap}        label="Voltage" value={`${twin.voltage?.toFixed(1) ?? '--'}V`} accent={T.warning} />
         </div>
-      </CardContent>
-    </Card>
+
+        {/* Secondary row */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem', width: '60%' }}>
+          <SensorTile icon={Gauge}    label="RPM" value={`${twin.rpm?.toFixed(0) ?? '--'}`} accent={T.inkMid} />
+          <SensorTile icon={Droplets} label="Humidity" value={`${twin.humidity?.toFixed(1) ?? '--'}%`} accent={T.steel} />
+        </div>
+      </div>
+
+      {/* Footer timestamp */}
+      <div style={{
+        padding: '0.75rem 1.5rem', borderTop: `1px solid ${T.creamMid}`, backgroundColor: T.cream,
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+      }}>
+        <span style={{ fontFamily: T.MONO, fontSize: '0.58rem', color: T.inkGhost, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+          Is Active: {twin.is_active ? 'Yes' : 'No'}
+        </span>
+        <span style={{ fontFamily: T.MONO, fontSize: '0.58rem', color: T.inkGhost, letterSpacing: '0.1em' }}>
+          {twin.last_updated ? new Date(twin.last_updated).toLocaleTimeString() : 'Awaiting data'}
+        </span>
+      </div>
+    </div>
   );
 }
 
-function SensorBox({ icon: Icon, label, value }: { icon: any, label: string, value: string }) {
+function SensorTile({ icon: Icon, label, value, accent }: { icon: any, label: string, value: string, accent: string }) {
   return (
-    <div className="bg-white border border-[#E5E7EB] rounded-lg p-3 flex flex-col items-center justify-center shadow-sm">
-      <Icon className="w-5 h-5 text-slate-400 mb-2" />
-      <span className="text-lg font-semibold text-slate-900">{value}</span>
-      <span className="text-xs text-slate-500 uppercase tracking-wider">{label}</span>
+    <div style={{
+      backgroundColor: T.cream, border: `1px solid ${T.creamMid}`, borderRadius: '0.625rem',
+      padding: '0.875rem', display: 'flex', flexDirection: 'column', alignItems: 'center',
+      gap: '0.375rem', textAlign: 'center', transition: 'border-color 0.2s ease',
+    }}>
+      <Icon style={{ width: '16px', height: '16px', color: accent, opacity: 0.8 }} />
+      <span style={{ fontFamily: T.FONT, fontWeight: 700, fontSize: '1rem', letterSpacing: '-0.02em', color: T.ink }}>
+        {value}
+      </span>
+      <span style={{ fontFamily: T.MONO, fontSize: '0.55rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: T.inkGhost }}>
+        {label}
+      </span>
     </div>
   );
 }

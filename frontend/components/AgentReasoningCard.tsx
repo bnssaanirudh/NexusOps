@@ -1,56 +1,106 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { TrendingUp, TrendingDown, BrainCircuit } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TrendingUp, TrendingDown, Minus, BrainCircuit } from "lucide-react";
 
 interface AgentReasoningProps {
   conclusion: string;
-  evidence: Array<{
-    metric: string;
-    trend: "up" | "down" | "stable";
-    value: string;
-  }>;
+  evidence: Array<{ metric: string; trend: "up" | "down" | "stable"; value: string; }>;
 }
+
+const T = {
+  cream: '#F2EEE8', creamDark: '#E8E2D9', creamMid: '#DDD5C8',
+  ink: '#1C1A18', inkMid: '#3D3830', inkSoft: '#6B6158', inkGhost: '#9A9089',
+  amber: '#C07C2A', amberLight: '#F5D6A8',
+  rust: '#B84432', rustLight: '#F0C4BC',
+  sage: '#3A6B4A', sageLight: '#C0D9C8',
+  steel: '#3A5070', steelLight: '#D0DFF0',
+  FONT: "'Space Grotesk', sans-serif",
+  MONO: "'Space Mono', monospace",
+};
 
 export function AgentReasoningCard({ conclusion, evidence }: AgentReasoningProps) {
   return (
-    <Card className="h-full flex flex-col bg-white border-[#E5E7EB]">
-      <CardHeader className="border-b border-[#E5E7EB] bg-slate-50/50 py-3">
-        <CardTitle className="text-sm font-semibold uppercase tracking-wider text-[#0F4C81] flex items-center gap-2">
-          <BrainCircuit className="w-4 h-4" /> AI Diagnostics
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-5 flex-1 flex flex-col">
-        <div className="mb-6">
-          <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-3">Key Evidence</p>
-          <div className="space-y-3">
+    <div style={{
+      display: 'flex', flexDirection: 'column', height: '100%',
+      backgroundColor: T.creamDark, border: `1px solid ${T.creamMid}`,
+      borderRadius: '0.75rem', overflow: 'hidden',
+    }}>
+      {/* Header */}
+      <div style={{
+        padding: '0.875rem 1.25rem',
+        borderBottom: `1px solid ${T.creamMid}`,
+        backgroundColor: T.cream,
+        display: 'flex', alignItems: 'center', gap: '0.5rem',
+      }}>
+        <BrainCircuit style={{ width: '14px', height: '14px', color: T.amber }} />
+        <span style={{ fontFamily: T.MONO, fontSize: '0.6rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: T.inkGhost, fontWeight: 700 }}>
+          AI Diagnostics
+        </span>
+      </div>
+
+      {/* Body */}
+      <div style={{ flex: 1, padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        
+        {/* Evidence */}
+        <div>
+          <div style={{ fontFamily: T.MONO, fontSize: '0.58rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: T.inkGhost, marginBottom: '0.75rem' }}>
+            Key Evidence
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {evidence.map((item, idx) => (
-              <motion.div 
+              <motion.div
                 key={idx}
-                initial={{ opacity: 0, x: 20 }}
+                initial={{ opacity: 0, x: 16 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.1 }}
-                className="flex items-center justify-between p-2 rounded-md bg-slate-50 border border-slate-100"
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '0.7rem 0.875rem',
+                  backgroundColor: T.cream,
+                  border: `1px solid ${T.creamMid}`,
+                  borderRadius: '0.5rem',
+                }}
               >
-                <span className="text-sm font-medium text-slate-700">{item.metric}</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-slate-900">{item.value}</span>
-                  {item.trend === "up" && <TrendingUp className="w-4 h-4 text-rose-500" />}
-                  {item.trend === "down" && <TrendingDown className="w-4 h-4 text-emerald-500" />}
+                <span style={{ fontFamily: T.FONT, fontWeight: 500, fontSize: '0.82rem', color: T.inkMid }}>
+                  {item.metric}
+                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ fontFamily: T.FONT, fontWeight: 700, fontSize: '0.88rem', color: T.ink }}>
+                    {item.value}
+                  </span>
+                  {item.trend === "up" && (
+                    <TrendingUp style={{ width: '14px', height: '14px', color: T.rust }} />
+                  )}
+                  {item.trend === "down" && (
+                    <TrendingDown style={{ width: '14px', height: '14px', color: T.sage }} />
+                  )}
+                  {item.trend === "stable" && (
+                    <Minus style={{ width: '14px', height: '14px', color: T.inkGhost }} />
+                  )}
                 </div>
               </motion.div>
             ))}
           </div>
         </div>
-        
-        <div className="mt-auto">
-          <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-2">Conclusion</p>
-          <div className="p-3 rounded-lg bg-blue-50 border border-blue-100 text-blue-900 font-semibold text-sm">
+
+        {/* Conclusion */}
+        <div style={{ marginTop: 'auto' }}>
+          <div style={{ fontFamily: T.MONO, fontSize: '0.58rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: T.inkGhost, marginBottom: '0.5rem' }}>
+            Conclusion
+          </div>
+          <div style={{
+            padding: '0.875rem 1rem',
+            backgroundColor: T.amberLight,
+            border: `1px solid ${T.amber}25`,
+            borderRadius: '0.5rem',
+            fontFamily: T.FONT, fontWeight: 600, fontSize: '0.85rem',
+            color: T.ink, lineHeight: 1.5,
+          }}>
             {conclusion}
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
